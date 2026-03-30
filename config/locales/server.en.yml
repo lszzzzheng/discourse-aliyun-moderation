@@ -1,0 +1,15 @@
+en:
+  site_settings:
+    aliyun_moderation_enabled: "Enable Aliyun moderation before post creation"
+    aliyun_moderation_profile_enabled: "Enable Aliyun moderation for profile create/update"
+    aliyun_moderation_gateway_url: "Moderation gateway URL"
+    aliyun_moderation_timeout_ms: "Moderation gateway timeout in milliseconds"
+    aliyun_moderation_fail_safe_mode: "Fallback mode when moderation fails"
+    aliyun_moderation_include_context_posts: "How many previous posts to send as context"
+  aliyun_moderation:
+    review_required: "Your post requires manual review before it can be published."
+    rejected: "Your post was blocked by content safety policy. Please edit and try again."
+    profile_review_required: "Your profile update requires manual review before it can be saved."
+    profile_rejected: "Your profile update was blocked by content safety policy."
+    profile_avatar_review_required: "Your avatar requires manual review before it can be updated."
+    profile_avatar_rejected: "Your avatar was blocked by content safety policy."

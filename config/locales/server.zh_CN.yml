@@ -1,0 +1,15 @@
+zh_CN:
+  site_settings:
+    aliyun_moderation_enabled: "启用发帖前阿里云审核"
+    aliyun_moderation_profile_enabled: "启用用户资料（注册/修改）阿里云审核"
+    aliyun_moderation_gateway_url: "审核网关地址"
+    aliyun_moderation_timeout_ms: "审核网关超时（毫秒）"
+    aliyun_moderation_fail_safe_mode: "审核失败兜底策略"
+    aliyun_moderation_include_context_posts: "发送给审核的上下文帖子数量"
+  aliyun_moderation:
+    review_required: "内容需人工审核后才能发布。"
+    rejected: "内容触发安全策略，已被拦截，请修改后重试。"
+    profile_review_required: "资料修改需人工审核后才能保存。"
+    profile_rejected: "资料内容触发安全策略，已被拦截。"
+    profile_avatar_review_required: "头像需人工审核后才能更新。"
+    profile_avatar_rejected: "头像触发安全策略，已被拦截。"

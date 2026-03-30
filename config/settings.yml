@@ -1,0 +1,27 @@
+plugins:
+  aliyun_moderation_enabled:
+    default: false
+    client: false
+  aliyun_moderation_profile_enabled:
+    default: false
+    client: false
+  aliyun_moderation_gateway_url:
+    default: "http://127.0.0.1:8080/moderate"
+    client: false
+  aliyun_moderation_timeout_ms:
+    default: 2000
+    min: 500
+    max: 10000
+    client: false
+  aliyun_moderation_fail_safe_mode:
+    default: "review"
+    type: enum
+    choices:
+      - review
+      - pass
+    client: false
+  aliyun_moderation_include_context_posts:
+    default: 2
+    min: 0
+    max: 5
+    client: false
