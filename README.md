@@ -25,6 +25,8 @@ After installation, go to `Admin -> Settings -> Plugins` and search `aliyun mode
 - `aliyun_moderation_fail_safe_mode`
 - `aliyun_moderation_include_context_posts`
 
+`aliyun_moderation_gateway_url` has no safe default. It must be set explicitly to the reachable gateway URL.
+
 ## Install In app.yml
 
 Recommended: pin the plugin to a tag or commit instead of tracking `main`.

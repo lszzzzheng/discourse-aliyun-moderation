@@ -3,25 +3,12 @@
 module ::AliyunModeration
   class ReviewQueue
     def self.enqueue!(creator:, result:)
-      payload = {
-        raw: creator.opts[:raw].to_s,
-        title: creator.opts[:title].to_s,
-        archetype: creator.opts[:archetype],
-        category: creator.opts[:category],
-        topic_id: creator.opts[:topic_id],
-        reply_to_post_number: creator.opts[:reply_to_post_number],
-        meta: {
-          decision: result[:decision],
-          risk_level: result[:risk_level],
-          labels: result[:labels],
-          req_id: result[:req_id],
-          error: result[:error]
-        }
-      }
+      payload = ::AliyunModeration::PayloadBuilder.review_queue_payload(creator, result: result)
+      target_user = creator.respond_to?(:user) ? creator.user : nil
 
       reviewable = ReviewableQueuedPost.needs_review!(
         created_by: Discourse.system_user,
-        target_created_by: creator.user,
+        target_created_by: target_user,
         payload: payload,
         reviewable_by_moderator: true
       )

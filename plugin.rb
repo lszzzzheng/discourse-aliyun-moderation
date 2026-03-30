@@ -2,7 +2,7 @@
 
 # name: discourse-aliyun-moderation
 # about: Pre-publish moderation via Aliyun multimodal gateway
-# version: 0.1.0
+# version: 0.1.1
 # authors: ClubContentReview
 # required_version: 3.2.0
 
@@ -39,29 +39,29 @@ after_initialize do
     end
   end
 
-  DiscourseEvent.on(:before_create_post) do |creator|
-    user = creator.user
+  DiscourseEvent.on(:before_create_post) do |subject|
+    user = subject.respond_to?(:user) ? subject.user : nil
     next unless ::AliyunModeration.enabled_for?(user)
 
     begin
-      result = ::AliyunModeration::Moderator.moderate_before_create!(creator)
+      result = ::AliyunModeration::Moderator.moderate_before_create!(subject)
 
       if result[:decision] == 'REVIEW'
-        ::AliyunModeration::ReviewQueue.enqueue!(creator: creator, result: result)
+        ::AliyunModeration::ReviewQueue.enqueue!(creator: subject, result: result)
         raise ::AliyunModeration::ReviewIntercept
       elsif result[:decision] == 'REJECT'
         raise ::AliyunModeration::RejectIntercept
       end
     rescue ::AliyunModeration::ReviewIntercept
-      creator.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+      subject.errors.add(:base, I18n.t('aliyun_moderation.review_required')) if subject.respond_to?(:errors)
       raise Discourse::InvalidAccess.new(I18n.t('aliyun_moderation.review_required'))
     rescue ::AliyunModeration::RejectIntercept
-      creator.errors.add(:base, I18n.t('aliyun_moderation.rejected'))
+      subject.errors.add(:base, I18n.t('aliyun_moderation.rejected')) if subject.respond_to?(:errors)
       raise Discourse::InvalidAccess.new(I18n.t('aliyun_moderation.rejected'))
     rescue => e
       # Conservative fail-safe: send to review queue instead of direct publish.
-      ::AliyunModeration::ReviewQueue.enqueue!(creator: creator, result: { decision: 'REVIEW', error: e.message, labels: [], risk_level: 'unknown' })
-      creator.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+      ::AliyunModeration::ReviewQueue.enqueue!(creator: subject, result: { decision: 'REVIEW', error: e.message, labels: [], risk_level: 'unknown' })
+      subject.errors.add(:base, I18n.t('aliyun_moderation.review_required')) if subject.respond_to?(:errors)
       raise Discourse::InvalidAccess.new(I18n.t('aliyun_moderation.review_required'))
     end
   end

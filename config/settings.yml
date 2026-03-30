@@ -6,7 +6,7 @@ plugins:
     default: false
     client: false
   aliyun_moderation_gateway_url:
-    default: "http://127.0.0.1:8080/moderate"
+    default: ""
     client: false
   aliyun_moderation_timeout_ms:
     default: 2000

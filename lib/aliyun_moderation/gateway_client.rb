@@ -6,6 +6,8 @@ require 'net/http'
 module ::AliyunModeration
   class GatewayClient
     def initialize(url:, timeout_ms:)
+      raise ::AliyunModeration::Error, 'gateway_url_not_configured' if url.blank?
+
       @uri = URI(url)
       @timeout_seconds = timeout_ms.to_f / 1000.0
     end
