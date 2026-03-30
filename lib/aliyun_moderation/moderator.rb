@@ -2,8 +2,13 @@
 
 module ::AliyunModeration
   class Moderator
-    def self.moderate_before_create!(creator)
-      payload = ::AliyunModeration::PayloadBuilder.from_creator(creator)
+    def self.moderate_before_create!(post:, opts:)
+      payload = ::AliyunModeration::PayloadBuilder.from_create(post: post, opts: opts)
+      moderate_payload!(payload)
+    end
+
+    def self.moderate_before_edit!(post:, fields:)
+      payload = ::AliyunModeration::PayloadBuilder.from_edit(post: post, fields: fields)
       moderate_payload!(payload)
     end
 

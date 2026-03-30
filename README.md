@@ -4,10 +4,12 @@ Standalone Discourse plugin for Aliyun moderation.
 
 This plugin intercepts:
 - topic and reply creation
+- topic and reply edits
 - signup/profile text updates
 - avatar updates
 
 It calls an external moderation gateway and applies `PASS`, `REVIEW`, or `REJECT`.
+It supports both external image URLs and Discourse-uploaded images embedded as `upload://...`, including posts that render to `/uploads/...` asset URLs.
 
 ## Requirements
 
@@ -41,7 +43,7 @@ hooks:
         cmd:
           - rm -rf discourse-aliyun-moderation
           - git clone https://github.com/lszzzzheng/discourse-aliyun-moderation.git
-          - cd discourse-aliyun-moderation && git checkout v1.0.0
+          - cd discourse-aliyun-moderation && git checkout v1.0.3
 ```
 
 Example using a commit:
@@ -67,7 +69,7 @@ cd /var/discourse
 ## Behavior
 
 - `PASS`: allow publish/save
-- `REVIEW`: queue post or block profile/avatar save with review message
+- `REVIEW`: queue new posts or block edits/profile/avatar save with review message
 - `REJECT`: block publish/save immediately
 - gateway failure: defaults to review unless fail-safe is switched to pass
 

@@ -2,7 +2,7 @@
 
 # name: discourse-aliyun-moderation
 # about: Pre-publish moderation via Aliyun multimodal gateway
-# version: 0.1.1
+# version: 0.1.3
 # authors: ClubContentReview
 # required_version: 3.2.0
 
@@ -13,8 +13,6 @@ after_initialize do
     PLUGIN_NAME = 'discourse-aliyun-moderation'
 
     class Error < StandardError; end
-    class ReviewIntercept < StandardError; end
-    class RejectIntercept < StandardError; end
   end
 
   require_relative 'lib/aliyun_moderation/gateway_client'
@@ -37,34 +35,66 @@ after_initialize do
 
       true
     end
+
+    def self.handle_post_moderation_result(post:, result:)
+      case result[:decision]
+      when 'PASS'
+        true
+      when 'REVIEW'
+        post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+        false
+      when 'REJECT'
+        post.errors.add(:base, I18n.t('aliyun_moderation.rejected'))
+        false
+      else
+        post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+        false
+      end
+    end
   end
 
-  DiscourseEvent.on(:before_create_post) do |subject|
-    user = subject.respond_to?(:user) ? subject.user : nil
+  DiscourseEvent.on(:before_create_post) do |post, opts|
+    user = post.user
     next unless ::AliyunModeration.enabled_for?(user)
 
     begin
-      result = ::AliyunModeration::Moderator.moderate_before_create!(subject)
+      result = ::AliyunModeration::Moderator.moderate_before_create!(post: post, opts: opts || {})
 
       if result[:decision] == 'REVIEW'
-        ::AliyunModeration::ReviewQueue.enqueue!(creator: subject, result: result)
-        raise ::AliyunModeration::ReviewIntercept
-      elsif result[:decision] == 'REJECT'
-        raise ::AliyunModeration::RejectIntercept
+        ::AliyunModeration::ReviewQueue.safe_enqueue_new_post!(post: post, opts: opts || {}, result: result)
       end
-    rescue ::AliyunModeration::ReviewIntercept
-      subject.errors.add(:base, I18n.t('aliyun_moderation.review_required')) if subject.respond_to?(:errors)
-      raise Discourse::InvalidAccess.new(I18n.t('aliyun_moderation.review_required'))
-    rescue ::AliyunModeration::RejectIntercept
-      subject.errors.add(:base, I18n.t('aliyun_moderation.rejected')) if subject.respond_to?(:errors)
-      raise Discourse::InvalidAccess.new(I18n.t('aliyun_moderation.rejected'))
+
+      ::AliyunModeration.handle_post_moderation_result(post: post, result: result)
     rescue => e
-      # Conservative fail-safe: send to review queue instead of direct publish.
-      ::AliyunModeration::ReviewQueue.enqueue!(creator: subject, result: { decision: 'REVIEW', error: e.message, labels: [], risk_level: 'unknown' })
-      subject.errors.add(:base, I18n.t('aliyun_moderation.review_required')) if subject.respond_to?(:errors)
-      raise Discourse::InvalidAccess.new(I18n.t('aliyun_moderation.review_required'))
+      ::AliyunModeration::ReviewQueue.safe_enqueue_new_post!(
+        post: post,
+        opts: opts || {},
+        result: { decision: 'REVIEW', error: e.message, labels: [], risk_level: 'unknown' }
+      )
+      post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
     end
   end
+
+  module ::AliyunModeration::PostRevisorExtension
+    def revise!(editor, fields, opts = {})
+      if ::AliyunModeration.enabled_for?(editor) &&
+           ::AliyunModeration::PayloadBuilder.reviewable_edit?(post: @post, fields: fields)
+        result = ::AliyunModeration::Moderator.moderate_before_edit!(post: @post, fields: fields)
+        return false unless ::AliyunModeration.handle_post_moderation_result(post: @post, result: result)
+      end
+
+      super
+    rescue => e
+      if SiteSetting.aliyun_moderation_fail_safe_mode == 'pass'
+        super
+      else
+        @post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+        false
+      end
+    end
+  end
+
+  ::PostRevisor.prepend(::AliyunModeration::PostRevisorExtension)
 
   User.class_eval do
     validate :aliyun_moderate_profile_text

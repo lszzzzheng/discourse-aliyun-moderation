@@ -2,9 +2,20 @@
 
 module ::AliyunModeration
   class ReviewQueue
-    def self.enqueue!(creator:, result:)
-      payload = ::AliyunModeration::PayloadBuilder.review_queue_payload(creator, result: result)
-      target_user = creator.respond_to?(:user) ? creator.user : nil
+    def self.safe_enqueue_new_post!(post:, opts:, result:)
+      enqueue_new_post!(post: post, opts: opts, result: result)
+    rescue => e
+      Rails.logger.error("[AliyunModeration] failed to enqueue new post review safely: #{e.class}: #{e.message}")
+      nil
+    end
+
+    def self.enqueue_new_post!(post:, opts:, result:)
+      payload = ::AliyunModeration::PayloadBuilder.review_queue_payload_from_create(
+        post: post,
+        opts: opts,
+        result: result
+      )
+      target_user = post.user
 
       reviewable = ReviewableQueuedPost.needs_review!(
         created_by: Discourse.system_user,
