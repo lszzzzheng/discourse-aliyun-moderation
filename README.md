@@ -28,6 +28,7 @@ After installation, go to `Admin -> Settings -> Plugins` and search `aliyun mode
 - `aliyun_moderation_include_context_posts`
 
 `aliyun_moderation_gateway_url` has no safe default. It must be set explicitly to the reachable gateway URL.
+For multimodal moderation, `aliyun_moderation_timeout_ms` often needs to be higher than 10000. A practical starting point is `25000` to `30000`.
 
 ## Install In app.yml
 

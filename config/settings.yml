@@ -9,9 +9,9 @@ plugins:
     default: ""
     client: false
   aliyun_moderation_timeout_ms:
-    default: 2000
+    default: 10000
     min: 500
-    max: 10000
+    max: 30000
     client: false
   aliyun_moderation_fail_safe_mode:
     default: "review"
