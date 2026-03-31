@@ -8,7 +8,9 @@ zh_CN:
     aliyun_moderation_include_context_posts: "发送给审核的上下文帖子数量"
   aliyun_moderation:
     review_required: "内容需人工审核后才能发布。"
+    review_queue_unavailable: "审核队列暂时不可用，请稍后重试。"
     rejected: "内容触发安全策略，已被拦截，请修改后重试。"
+    too_many_images_review_required: "图片数量超过 %{count} 张，需人工审核后才能发布。"
     profile_review_required: "资料修改需人工审核后才能保存。"
     profile_rejected: "资料内容触发安全策略，已被拦截。"
     profile_avatar_review_required: "头像需人工审核后才能更新。"

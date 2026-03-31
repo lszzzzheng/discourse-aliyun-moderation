@@ -23,6 +23,16 @@ module ::AliyunModeration
     end
 
     def self.moderate_payload!(payload)
+      if payload[:scene] == 'post' &&
+           payload[:image_count].to_i > ::AliyunModeration::PayloadBuilder::MAX_AUTOMATED_IMAGES
+        return {
+          decision: 'REVIEW',
+          risk_level: 'too_many_images',
+          labels: [],
+          error: 'too_many_images'
+        }
+      end
+
       client = ::AliyunModeration::GatewayClient.new(
         url: SiteSetting.aliyun_moderation_gateway_url,
         timeout_ms: SiteSetting.aliyun_moderation_timeout_ms

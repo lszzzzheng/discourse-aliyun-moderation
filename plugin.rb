@@ -2,7 +2,7 @@
 
 # name: discourse-aliyun-moderation
 # about: Pre-publish moderation via Aliyun multimodal gateway
-# version: 0.1.3
+# version: 0.1.5
 # authors: ClubContentReview
 # required_version: 3.2.0
 
@@ -41,7 +41,7 @@ after_initialize do
       when 'PASS'
         true
       when 'REVIEW'
-        post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+        post.errors.add(:base, review_message_for(result))
         false
       when 'REJECT'
         post.errors.add(:base, I18n.t('aliyun_moderation.rejected'))
@@ -49,6 +49,14 @@ after_initialize do
       else
         post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
         false
+      end
+    end
+
+    def self.review_message_for(result)
+      if result[:risk_level].to_s == 'too_many_images' || result[:error].to_s == 'too_many_images'
+        I18n.t('aliyun_moderation.too_many_images_review_required', count: ::AliyunModeration::PayloadBuilder::MAX_AUTOMATED_IMAGES)
+      else
+        I18n.t('aliyun_moderation.review_required')
       end
     end
   end
@@ -61,17 +69,21 @@ after_initialize do
       result = ::AliyunModeration::Moderator.moderate_before_create!(post: post, opts: opts || {})
 
       if result[:decision] == 'REVIEW'
-        ::AliyunModeration::ReviewQueue.safe_enqueue_new_post!(post: post, opts: opts || {}, result: result)
+        enqueued = ::AliyunModeration::ReviewQueue.safe_enqueue_new_post!(post: post, opts: opts || {}, result: result)
+        if !enqueued
+          post.errors.add(:base, I18n.t('aliyun_moderation.review_queue_unavailable'))
+          next
+        end
       end
 
       ::AliyunModeration.handle_post_moderation_result(post: post, result: result)
     rescue => e
-      ::AliyunModeration::ReviewQueue.safe_enqueue_new_post!(
+      enqueued = ::AliyunModeration::ReviewQueue.safe_enqueue_new_post!(
         post: post,
         opts: opts || {},
         result: { decision: 'REVIEW', error: e.message, labels: [], risk_level: 'unknown' }
       )
-      post.errors.add(:base, I18n.t('aliyun_moderation.review_required'))
+      post.errors.add(:base, enqueued ? I18n.t('aliyun_moderation.review_required') : I18n.t('aliyun_moderation.review_queue_unavailable'))
     end
   end
 

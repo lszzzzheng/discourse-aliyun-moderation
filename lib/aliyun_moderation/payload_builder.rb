@@ -2,6 +2,8 @@
 
 module ::AliyunModeration
   class PayloadBuilder
+    MAX_AUTOMATED_IMAGES = 10
+
     IMAGE_PATTERN = %r{https?://[^\s)\]"'>]+\.(?:jpg|jpeg|png|gif|webp|bmp|heic|heif|tif|tiff|svg|ico)}i
     RELATIVE_UPLOAD_PATTERN = %r{/uploads/[^\s)\]"'>]+}i
     IMG_SRC_PATTERN = /<img[^>]+src=["']([^"']+)["']/i
@@ -9,23 +11,27 @@ module ::AliyunModeration
 
     def self.from_create(post:, opts:)
       context = create_context(post: post, opts: opts)
+      images = extract_images(context[:raw])
       {
         scene: 'post',
         title: context[:title],
         text: context[:raw],
-        images: extract_images(context[:raw]),
+        images: images.first(MAX_AUTOMATED_IMAGES),
+        image_count: images.length,
         comments: extract_context_posts(context[:topic])
       }
     end
 
     def self.from_edit(post:, fields:)
       context = edit_context(post: post, fields: fields)
+      images = extract_images(context[:raw])
 
       {
         scene: 'post',
         title: context[:title],
         text: context[:raw],
-        images: extract_images(context[:raw]),
+        images: images.first(MAX_AUTOMATED_IMAGES),
+        image_count: images.length,
         comments: extract_context_posts(context[:topic])
       }
     end
@@ -55,7 +61,6 @@ module ::AliyunModeration
         .map { |url| normalize_image_url(url) }
         .compact
         .uniq
-        .first(10)
     end
 
     def self.extract_context_posts(topic)

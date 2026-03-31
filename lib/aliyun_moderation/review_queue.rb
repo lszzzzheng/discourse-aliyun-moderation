@@ -4,9 +4,10 @@ module ::AliyunModeration
   class ReviewQueue
     def self.safe_enqueue_new_post!(post:, opts:, result:)
       enqueue_new_post!(post: post, opts: opts, result: result)
+      true
     rescue => e
       Rails.logger.error("[AliyunModeration] failed to enqueue new post review safely: #{e.class}: #{e.message}")
-      nil
+      false
     end
 
     def self.enqueue_new_post!(post:, opts:, result:)
