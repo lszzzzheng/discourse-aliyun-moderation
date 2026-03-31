@@ -3,6 +3,7 @@
 module ::AliyunModeration
   class PayloadBuilder
     MAX_AUTOMATED_IMAGES = 10
+    MAX_MULTIMODAL_TEXT_CHARS = 5000
 
     IMAGE_PATTERN = %r{https?://[^\s)\]"'>]+\.(?:jpg|jpeg|png|gif|webp|bmp|heic|heif|tif|tiff|svg|ico)}i
     RELATIVE_UPLOAD_PATTERN = %r{/uploads/[^\s)\]"'>]+}i
@@ -18,6 +19,7 @@ module ::AliyunModeration
         text: context[:raw],
         images: images.first(MAX_AUTOMATED_IMAGES),
         image_count: images.length,
+        text_length: multimodal_text_length(context[:title], context[:raw]),
         comments: extract_context_posts(context[:topic])
       }
     end
@@ -32,6 +34,7 @@ module ::AliyunModeration
         text: context[:raw],
         images: images.first(MAX_AUTOMATED_IMAGES),
         image_count: images.length,
+        text_length: multimodal_text_length(context[:title], context[:raw]),
         comments: extract_context_posts(context[:topic])
       }
     end
@@ -178,6 +181,10 @@ module ::AliyunModeration
       return nil if topic_id.blank?
 
       Topic.find_by(id: topic_id)
+    end
+
+    def self.multimodal_text_length(title, text)
+      title.to_s.length + text.to_s.length
     end
 
     def self.inferred_post_title(subject, topic)

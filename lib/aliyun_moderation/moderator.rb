@@ -33,6 +33,17 @@ module ::AliyunModeration
         }
       end
 
+      if payload[:scene] == 'post' &&
+           payload[:image_count].to_i.positive? &&
+           payload[:text_length].to_i > ::AliyunModeration::PayloadBuilder::MAX_MULTIMODAL_TEXT_CHARS
+        return {
+          decision: 'REVIEW',
+          risk_level: 'text_too_long_for_multimodal',
+          labels: [],
+          error: 'text_too_long_for_multimodal'
+        }
+      end
+
       client = ::AliyunModeration::GatewayClient.new(
         url: SiteSetting.aliyun_moderation_gateway_url,
         timeout_ms: SiteSetting.aliyun_moderation_timeout_ms

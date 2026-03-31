@@ -2,7 +2,7 @@
 
 # name: discourse-aliyun-moderation
 # about: Pre-publish moderation via Aliyun multimodal gateway
-# version: 0.1.5
+# version: 0.1.6
 # authors: ClubContentReview
 # required_version: 3.2.0
 
@@ -55,6 +55,8 @@ after_initialize do
     def self.review_message_for(result)
       if result[:risk_level].to_s == 'too_many_images' || result[:error].to_s == 'too_many_images'
         I18n.t('aliyun_moderation.too_many_images_review_required', count: ::AliyunModeration::PayloadBuilder::MAX_AUTOMATED_IMAGES)
+      elsif result[:risk_level].to_s == 'text_too_long_for_multimodal' || result[:error].to_s == 'text_too_long_for_multimodal'
+        I18n.t('aliyun_moderation.text_too_long_review_required', count: ::AliyunModeration::PayloadBuilder::MAX_MULTIMODAL_TEXT_CHARS)
       else
         I18n.t('aliyun_moderation.review_required')
       end

@@ -11,6 +11,7 @@ en:
     review_queue_unavailable: "The moderation queue is temporarily unavailable. Please try again later."
     rejected: "Your post was blocked by content safety policy. Please edit and try again."
     too_many_images_review_required: "Posts with more than %{count} images require manual review before they can be published."
+    text_too_long_review_required: "Posts whose multimodal text exceeds %{count} characters require manual review before they can be published."
     profile_review_required: "Your profile update requires manual review before it can be saved."
     profile_rejected: "Your profile update was blocked by content safety policy."
     profile_avatar_review_required: "Your avatar requires manual review before it can be updated."
